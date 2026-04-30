@@ -63,10 +63,12 @@ export default function HomePage() {
 
   const isWindows = os === 'windows'
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
+  const isMac = os === 'mac-arm' || os === 'mac-x64'
   const cliLines = isWindows
     ? [`${download.file} --target ${target || 'example.com'} --site ${origin}`]
     : [
         `chmod +x ./${download.file}`,
+        ...(isMac ? [`xattr -dr com.apple.quarantine ./${download.file}`] : []),
         `./${download.file} --target ${target || 'example.com'} --site ${origin}`,
       ]
   const cliCmd = cliLines.join('\n')
