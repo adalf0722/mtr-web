@@ -3,17 +3,25 @@ import { useNavigate } from 'react-router-dom'
 import { parseMtr } from '../lib/parseMtr'
 import { encodeData } from '../lib/encode'
 
-function detectOs(): 'mac' | 'windows' | 'linux' {
+function detectOs(): 'mac-arm' | 'mac-x64' | 'windows' | 'linux' {
   const ua = navigator.userAgent.toLowerCase()
   if (ua.includes('win')) return 'windows'
-  if (ua.includes('mac')) return 'mac'
+  if (ua.includes('mac')) {
+    // Apple Silicon 的 ua 包含 'mac os x' 但也可從 navigator.platform 判斷
+    // 最可靠的方式是嘗試建立 WebAssembly SIMD，但這裡用 hardwareConcurrency 不夠準確
+    // 改用 userAgentData 若支援
+    const platform = (navigator as Navigator & { userAgentData?: { platform: string } }).userAgentData?.platform ?? ''
+    if (platform.toLowerCase().includes('arm') || ua.includes('apple m')) return 'mac-arm'
+    return 'mac-x64'
+  }
   return 'linux'
 }
 
 const CLI_DOWNLOADS = {
-  mac:     { label: 'macOS (Apple Silicon)', file: 'mtr-runner-darwin-arm64' },
-  windows: { label: 'Windows (64-bit)',       file: 'mtr-runner-windows-amd64.exe' },
-  linux:   { label: 'Linux (64-bit)',          file: 'mtr-runner-linux-amd64' },
+  'mac-arm': { label: 'macOS (Apple Silicon)', file: 'mtr-runner-darwin-arm64' },
+  'mac-x64': { label: 'macOS (Intel)',          file: 'mtr-runner-darwin-amd64' },
+  windows:   { label: 'Windows (64-bit)',        file: 'mtr-runner-windows-amd64.exe' },
+  linux:     { label: 'Linux (64-bit)',           file: 'mtr-runner-linux-amd64' },
 }
 
 const RELEASES_URL = 'https://github.com/adalf0722/mtr-runner/releases/latest/download'
