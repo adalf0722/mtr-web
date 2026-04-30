@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { parseMtr } from '../lib/parseMtr'
 import { encodeData } from '../lib/encode'
@@ -61,7 +61,23 @@ export default function HomePage() {
     }
   }
 
-  const cliCmd = `${download.file} --target ${target || 'example.com'} --site ${typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'}`
+  const isWindows = os === 'windows'
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-site.com'
+  const cliLines = isWindows
+    ? [`${download.file} --target ${target || 'example.com'} --site ${origin}`]
+    : [
+        `chmod +x ./${download.file}`,
+        `./${download.file} --target ${target || 'example.com'} --site ${origin}`,
+      ]
+  const cliCmd = cliLines.join('\n')
+
+  const [copied, setCopied] = useState(false)
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(cliCmd).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [cliCmd])
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 p-6 max-w-2xl mx-auto">
@@ -88,7 +104,15 @@ export default function HomePage() {
           下載 {download.file}
         </a>
         <p className="text-gray-400 text-sm mb-2">下載後在終端機執行：</p>
-        <pre className="bg-gray-800 rounded p-3 text-xs text-green-300 overflow-x-auto">{cliCmd}</pre>
+        <div className="relative">
+          <pre className="bg-gray-800 rounded p-3 text-xs text-green-300 overflow-x-auto pr-16">{cliCmd}</pre>
+          <button
+            onClick={handleCopy}
+            className="absolute top-2 right-2 text-xs px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300"
+          >
+            {copied ? '已複製' : '複製'}
+          </button>
+        </div>
         <p className="text-gray-500 text-xs mt-2">執行完成後瀏覽器會自動開啟結果頁</p>
       </div>
 
