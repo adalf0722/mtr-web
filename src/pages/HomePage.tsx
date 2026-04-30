@@ -16,7 +16,7 @@ const CLI_DOWNLOADS = {
   linux:   { label: 'Linux (64-bit)',          file: 'mtr-runner-linux-amd64' },
 }
 
-const RELEASES_URL = 'https://github.com/YOUR_ORG/mtr-runner/releases/latest/download'
+const RELEASES_URL = 'https://github.com/adalf0722/mtr-runner/releases/latest/download'
 
 export default function HomePage() {
   const [target, setTarget] = useState('')
